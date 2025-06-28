@@ -1,11 +1,11 @@
 package main
 
 import(
-	//"github.com/gin-gonic/gin" //фреймворк для API
     "gorm.io/gorm" //для работы с бд (ORM)
 	"gorm.io/driver/postgres" //драйвер для постгри
 	"time"
 	"log"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main(){
@@ -27,4 +27,13 @@ func main(){
 	}
 
 	db.AutoMigrate(&Transaction{}) //передаем указатель созданный пустой экземпляр структуры
+
+
+	app := fiber.New()
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World!")
+	})
+
+	app.Listen(":3000")
 }
