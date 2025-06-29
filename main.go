@@ -10,12 +10,12 @@ import (
 )
 
 type Transaction struct { //модель
-	ID          uint
-	Amount      float64
-	Type        string  //тип транзакции - трата или расход
+	ID          uint	`gorm:"primaryKey"`
+	Amount      float64  `gorm:"not null"`
+	Type        string   `gorm:"not null"` //тип транзакции - трата или расход
 	Category    string  //категория - еда, одежда и тд
 	Description *string //может быть пустым
-	Date        time.Time
+	Date        time.Time 
 	CreatedAt   time.Time //автоматически создается GORM
 }
 
@@ -35,6 +35,12 @@ func GetTransaction(c *fiber.Ctx) error { //обрабатываем HTTP-мет
 func PostTransactions(c *fiber.Ctx) error {
 		transaction := new(Transaction) //возвращаем указатель на пустую структуру
 		c.BodyParser(transaction)       //записывает данные из запроса в структуру
+
+		// Если Date не передан в запросе, установим текущее время
+		if transaction.Date.IsZero() {
+			transaction.Date = time.Now()
+		}
+
 		db.Create(transaction)
 		return c.Status(201).JSON(transaction)
 	}
