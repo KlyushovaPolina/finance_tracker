@@ -15,7 +15,7 @@ import (
 type Transaction struct { //модель
 	ID          uint	`gorm:"primaryKey"`
 	Amount      float64  `gorm:"not null"`
-	Type        string   `gorm:"not null"` //тип транзакции - трата или расход
+	Type        string   `gorm:"not null; check:type_check,type IN ('income','expense')"` //тип транзакции - трата или расход
 	Category    string  //категория - еда, одежда и тд
 	Description *string //может быть пустым
 	Date        time.Time 
@@ -44,6 +44,10 @@ func PostTransactions(c *fiber.Ctx) error {
 
 		if transaction.Type == "" || transaction.Amount == 0 {
 			return c.Status(400).JSON(fiber.Map{"error": "Type and Amount are required"})
+		}
+
+		if transaction.Type != "income" && transaction.Type != "expense" {
+			return c.Status(400).JSON(fiber.Map{"error": "Type must be 'income' or 'expense'"})
 		}
 
 		// Если Date не передан в запросе, установим текущее время
