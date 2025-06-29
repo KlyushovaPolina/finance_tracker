@@ -1,0 +1,33 @@
+# Бинарные файлы
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Сборочные директории
+bin/
+build/
+
+# Кэш Go
+/pkg/
+/vendor/
+
+# Файлы зависимостей (при использовании go mod vendor)
+vendor/
+
+# OS system files
+.DS_Store
+Thumbs.db
+
+# Конфиденциальные данные
+.env
+
+# IDE файлы (VSCode, GoLand)
+.vscode/
+.idea/
+
+# Логи
+*.log
