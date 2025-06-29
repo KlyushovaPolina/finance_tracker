@@ -34,7 +34,14 @@ func GetTransaction(c *fiber.Ctx) error { //обрабатываем HTTP-мет
 
 func PostTransactions(c *fiber.Ctx) error {
 		transaction := new(Transaction) //возвращаем указатель на пустую структуру
-		c.BodyParser(transaction)       //записывает данные из запроса в структуру
+		err := c.BodyParser(transaction) //записывает данные из запроса в структуру
+		if err != nil {       
+			return c.Status(400).JSON(fiber.Map{"error": err.Error()}) //Map возвращает json
+		}
+
+		if transaction.Type == "" || transaction.Amount == 0 {
+			return c.Status(400).JSON(fiber.Map{"error": "Type and Amount are required"})
+		}
 
 		// Если Date не передан в запросе, установим текущее время
 		if transaction.Date.IsZero() {
