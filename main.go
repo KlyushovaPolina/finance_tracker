@@ -41,6 +41,12 @@ func main(){
 		return c.JSON(transactions)
 	})
 
+	app.Post("/transactions", func(c *fiber.Ctx) error {
+		transaction := new(Transaction) //возвращаем указатель на пустую структуру
+		c.BodyParser(transaction) //записывает данные из запроса в структуру
+		db.Create(transaction)
+		return c.Status(201).JSON(transaction)
+	})
 
 	app.Listen(":3000")
 }
