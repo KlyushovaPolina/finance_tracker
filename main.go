@@ -26,14 +26,21 @@ func main(){
     	log.Fatal("Ошибка подключения к базе данных:", err) //выводит сообщение и завершает программу
 	}
 
-	db.AutoMigrate(&Transaction{}) //передаем указатель созданный пустой экземпляр структуры
+	db.AutoMigrate(&Transaction{}) //передаем указатель на созданный пустой экземпляр структуры
 
 
-	app := fiber.New()
+	app := fiber.New() //экземпляр fiber
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
+	app.Get("/transactions", func(c *fiber.Ctx) error { //обрабатываем HTTP-метод GET.
+		// c *fiber.Ctx - указатель на контекст запроса
+		// error - тип, возвращаемый функцией
+		// определяем функцию, которая вызывается когда поступает запрос
+		
+		var transactions []Transaction //создаем срез для хранения списка транзакций из бд
+		db.Find(&transactions)
+		return c.JSON(transactions)
 	})
+
 
 	app.Listen(":3000")
 }
