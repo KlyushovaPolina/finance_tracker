@@ -7,6 +7,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/postgres" //драйвер для постгри
 	"gorm.io/gorm"            //для работы с бд (ORM)
+
+	"github.com/joho/godotenv"
+	"os"
 )
 
 type Transaction struct { //модель
@@ -53,8 +56,15 @@ func PostTransactions(c *fiber.Ctx) error {
 	}
 
 func main() {
-	dsn := "host=localhost user=postgres password=postgres dbname=finance-tracker port=5432 sslmode=disable TimeZone=Europe/Moscow" //data source name
-	var err error
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Ошибка загрузки .env файла")
+	}
+	db_user := os.Getenv("DB_USER")
+    db_name := os.Getenv("DB_NAME")
+	db_password := os.Getenv("DB_PASSWORD")
+	dsn := "host=localhost user=" + db_user + " password=" + db_password + " dbname=" + db_name + " port=5432 sslmode=disable TimeZone=Europe/Moscow" //data source name
+
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
