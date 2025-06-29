@@ -55,6 +55,26 @@ func PostTransactions(c *fiber.Ctx) error {
 		return c.Status(201).JSON(transaction)
 	}
 
+func GetBalance(c *fiber.Ctx) error {
+	var totalIncome float64
+	var totalExpense float64
+
+		db.Model(&Transaction{}).
+		Where("type = ?", "income").
+		Select("COALESCE(SUM(amount),0)"). //COALESCE заменит NULL на 0 если подходящие записи не найдены
+		Scan(&totalIncome) //запишет результат запроса в переменную
+
+	db.Model(&Transaction{}).
+		Where("type = ?", "expense").
+		Select("COALESCE(SUM(amount),0)").
+		Scan(&totalExpense)
+
+	balance := totalIncome - totalExpense
+
+	return c.Status(200).JSON(fiber.Map{"balance": balance})
+}
+
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -77,6 +97,7 @@ func main() {
 
 	app.Get("/transactions", GetTransaction)
 	app.Post("/transactions", PostTransactions)
+	app.Get("/balance", GetBalance)
 
 	app.Listen(":3000")
 }
