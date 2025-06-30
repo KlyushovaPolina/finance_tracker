@@ -460,6 +460,13 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
@@ -467,9 +474,9 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "",
 	Host:             "localhost:3000",
-	BasePath:         "",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Finance tracker API",
+	Title:            "Finance Tracker API",
 	Description:      "API for tracking personal finance transactions",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

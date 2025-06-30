@@ -333,9 +333,13 @@ func ExtractUserIDMiddleware(c *fiber.Ctx) error {
     return c.Next()
 }
 
-// @title Finance tracker API
+// @title Finance Tracker API
 // @description API for tracking personal finance transactions
 // @host localhost:3000
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	err := godotenv.Load()
 	if err != nil {

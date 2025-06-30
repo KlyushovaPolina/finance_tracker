@@ -1,3 +1,4 @@
+basePath: /
 definitions:
   main.Transaction:
     properties:
@@ -34,7 +35,7 @@ host: localhost:3000
 info:
   contact: {}
   description: API for tracking personal finance transactions
-  title: Finance tracker API
+  title: Finance Tracker API
 paths:
   /api/balance:
     get:
@@ -294,4 +295,9 @@ paths:
       summary: Register a new user
       tags:
       - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
