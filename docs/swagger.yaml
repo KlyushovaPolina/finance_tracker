@@ -123,7 +123,7 @@ paths:
               type: string
             type: object
       summary: Delete a transaction
-    patch:
+    put:
       consumes:
       - application/json
       parameters:
@@ -132,7 +132,7 @@ paths:
         name: id
         required: true
         type: integer
-      - description: Transaction data
+      - description: Full Transaction data
         in: body
         name: transaction
         required: true
@@ -157,5 +157,5 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Update a transaction
+      summary: Fully update a transaction
 swagger: "2.0"

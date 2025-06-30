@@ -74,17 +74,17 @@ func PostTransactions(c *fiber.Ctx) error {
 		return c.Status(201).JSON(transaction)
 	}
 
-// PATCH /transactions/:id
-// @Summary Update a transaction
+// PUT /transactions/:id
+// @Summary Fully update a transaction
 // @Accept json
 // @Produce json
 // @Param id path int true "Transaction ID"
-// @Param transaction body Transaction true "Transaction data"
+// @Param transaction body Transaction true "Full Transaction data"
 // @Success 200 {object} Transaction
 // @Failure 400 {object} map[string]string "Error response"
 // @Failure 404 {object} map[string]string "Error response"
-// @Router /transactions/{id} [patch]
-func UpdateTransaction(c *fiber.Ctx) error {
+// @Router /transactions/{id} [put]
+func PutTransaction(c *fiber.Ctx) error {
 	id := c.Params("id") //получаем id из URL
 
 	var transaction Transaction
@@ -92,18 +92,19 @@ func UpdateTransaction(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Transaction not found"})
 	}
 
-	updateData := new(Transaction)
-	if err := c.BodyParser(updateData); err != nil {
+	updated := new(Transaction)
+	if err := c.BodyParser(updated); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
+	
+	// Обновляем все поля (кроме ID и CreatedAt)
+	transaction.Amount = updated.Amount
+	transaction.Type = updated.Type
+	transaction.Category = updated.Category
+	transaction.Description = updated.Description
+	transaction.Date = updated.Date
 
-	// Проверим что Type корректный, если он передан
-	if updateData.Type != "" && updateData.Type != "income" && updateData.Type != "expense" {
-		return c.Status(400).JSON(fiber.Map{"error": "Type must be 'income' or 'expense'"})
-	}
-
-	// Обновляем только переданные поля
-	db.Model(&transaction).Updates(updateData)
+	db.Save(&transaction)
 
 	return c.JSON(transaction)
 }
@@ -182,7 +183,7 @@ func main() {
 
 	app.Get("/transactions", GetTransaction)
 	app.Post("/transactions", PostTransactions)
-	app.Patch("/transactions/:id", UpdateTransaction)
+	app.Put("/transactions/:id", PutTransaction)
 	app.Delete("/transactions/:id", DeleteTransaction)
 	app.Get("/balance", GetBalance)
 

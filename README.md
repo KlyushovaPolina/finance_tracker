@@ -56,7 +56,7 @@ go run main.go
 |-------|-----------------------|---------------------------|
 | GET   | /transactions         | Получить все транзакции   |
 | POST  | /transactions         | Создать новую транзакцию  |
-| PATCH | /transactions/:id     | Обновить транзакцию по ID |
+| PUT   | /transactions/:id     | Изменить транзакцию по ID |
 | DELETE | /transactions/:id    | Удалить транзакцию по ID  |
 | GET   | /balance              | Получить текущий баланс   |
 | GET   | /swagger/*            | Swagger UI документация   |
