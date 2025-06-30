@@ -13,6 +13,8 @@ import (
 
 	"github.com/gofiber/swagger"
 	_ "finance-tracker/docs"
+
+	"golang.org/x/crypto/bcrypt" //для хеширования пароля
 )
 
 type Transaction struct { //модель
@@ -28,7 +30,17 @@ type Transaction struct { //модель
 type User struct {
 	ID uint `gorm:"primaryKey"`
 	Email string `gorm:"not null"`
-	Password string `gorm:"not null"`
+	PasswordHash string `gorm:"not null"`
+}
+
+func GeneratePassword(p string) string { //возвращает хеш пароля
+	hash, _ := bcrypt.GenerateFromPassword([]byte(p), bcrypt.DefaultCost)
+	return string(hash)
+}
+
+func ComparePassword(hashedPassword, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
 }
 
 var db *gorm.DB
