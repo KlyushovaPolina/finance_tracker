@@ -34,6 +34,11 @@ type User struct {
 	PasswordHash string `gorm:"not null"`
 }
 
+type authRequest struct {
+    Email    string `json:"email"`
+    Password string `json:"password"`
+}
+
 //хэширование пароля
 func GeneratePassword(p string) string { //возвращает хеш пароля
 	hash, _ := bcrypt.GenerateFromPassword([]byte(p), bcrypt.DefaultCost)
@@ -53,7 +58,7 @@ func GenerateToken(id uint) (string, error) {
 
 	secret_key := os.Getenv("JWT_SECRET")
 
-	t, err := token.SignedString(secret_key) //подписываем токен секретным ключом
+	t, err := token.SignedString([]byte(secret_key)) //подписываем токен секретным ключом
 		if err != nil {
 			return "", err
 	}
@@ -206,6 +211,58 @@ func GetBalance(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"balance": balance})
 }
 
+func Register(c *fiber.Ctx) error {
+    var req authRequest //структура для десереализации JSON
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(400).JSON(fiber.Map{
+            "message": err.Error(),
+        })
+    }
+    user := User{
+        Email:        req.Email,
+        PasswordHash: GeneratePassword(req.Password),
+    }
+    res := db.Create(&user)
+    if res.Error != nil {
+        return c.Status(400).JSON(fiber.Map{
+            "message": res.Error.Error(),
+        })
+    }
+    return c.Status(201).JSON(fiber.Map{
+        "message": "user created",
+    })
+}
+
+func Login(c *fiber.Ctx) error {
+    var req authRequest
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(400).JSON(fiber.Map{
+            "message": err.Error(),
+        })
+    }
+    var user User
+    res := db.Where("email = ?", req.Email).First(&user)
+    if res.Error != nil {
+        return c.Status(400).JSON(fiber.Map{
+            "message": "user not found",
+        })
+    }
+	if !ComparePassword(user.PasswordHash, req.Password) {
+   		return c.Status(400).JSON(fiber.Map{
+        	"message": "incorrect password",
+    	})
+	}
+    token, err := GenerateToken(user.ID)
+    if err != nil {
+        return c.Status(500).JSON(fiber.Map{
+            "message": err.Error(),
+        })
+    }
+    return c.JSON(fiber.Map{
+        "token": token,
+    })
+}
+
 // @title Finance tracker API
 // @description API for tracking personal finance transactions
 // @host localhost:3000
@@ -237,6 +294,11 @@ func main() {
 	app.Put("/transactions/:id", PutTransaction)
 	app.Delete("/transactions/:id", DeleteTransaction)
 	app.Get("/balance", GetBalance)
+
+	// Auth
+	auth := app.Group("/auth")
+	auth.Post("/login", Login)
+	auth.Post("/register", Register)
 
 	app.Listen(":3000")
 }
