@@ -25,6 +25,12 @@ type Transaction struct { //модель
 	CreatedAt   time.Time //автоматически создается GORM
 }
 
+type User struct {
+	ID uint `gorm:"primaryKey"`
+	Email string `gorm:"not null"`
+	Password string `gorm:"not null"`
+}
+
 var db *gorm.DB
 
 // @Summary Get all transactions
@@ -176,7 +182,7 @@ func main() {
 		log.Fatal("Ошибка подключения к базе данных:", err) //выводит сообщение и завершает программу
 	}
 
-	db.AutoMigrate(&Transaction{}) //передаем указатель на созданный пустой экземпляр структуры
+	db.AutoMigrate(&Transaction{}, &User{}) //передаем указатель на созданный пустой экземпляр структуры
 
 	app := fiber.New() //экземпляр fiber
 
