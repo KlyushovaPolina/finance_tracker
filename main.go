@@ -10,6 +10,9 @@ import (
 
 	"github.com/joho/godotenv"
 	"os"
+
+	"github.com/gofiber/swagger"
+	_ "finance-tracker/docs"
 )
 
 type Transaction struct { //модель
@@ -78,7 +81,10 @@ func GetBalance(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"balance": balance})
 }
 
-
+// @title Fiber Example API
+// @version 1.0
+// @description This is a sample swagger for Fiber
+// @termsOfService http://swagger.io/terms/
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -98,6 +104,8 @@ func main() {
 	db.AutoMigrate(&Transaction{}) //передаем указатель на созданный пустой экземпляр структуры
 
 	app := fiber.New() //экземпляр fiber
+
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	app.Get("/transactions", GetTransaction)
 	app.Post("/transactions", PostTransactions)

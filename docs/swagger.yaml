@@ -1,0 +1,8 @@
+info:
+  contact: {}
+  description: This is a sample swagger for Fiber
+  termsOfService: http://swagger.io/terms/
+  title: Fiber Example API
+  version: "1.0"
+paths: {}
+swagger: "2.0"
