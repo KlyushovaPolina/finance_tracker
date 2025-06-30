@@ -16,6 +16,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt" //для хеширования пароля
 	"github.com/golang-jwt/jwt/v5" //для генерации токена
+	jwtware "github.com/gofiber/contrib/jwt" //для проверки токена
 )
 
 type Transaction struct { //модель
@@ -261,6 +262,19 @@ func Login(c *fiber.Ctx) error {
     return c.JSON(fiber.Map{
         "token": token,
     })
+}
+
+func JWTProtected(c *fiber.Ctx) error { //middleware проверяющее JWT-токен
+    return jwtware.New(jwtware.Config{ //возвращает функцию
+        SigningKey: jwtware.SigningKey{Key: []byte(os.Getenv("JWT_SECRET"))},
+        ContextKey: "jwt",
+        ErrorHandler: func(c *fiber.Ctx, err error) error { //обработчик ошибок если токен отсутствует
+            return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+                "error": true,
+                "msg":   err.Error(),
+            })
+        },
+    })(c) //созданный мидлвар вызывается текущим контекстом
 }
 
 // @title Finance tracker API
