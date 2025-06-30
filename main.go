@@ -27,7 +27,12 @@ type Transaction struct { //модель
 
 var db *gorm.DB
 
-
+// @Summary Get all transactions
+// @Accept json
+// @Produce json
+// @Success 200 {array} Transaction
+// @Failure 500 {object} map[string]string "Error response"
+// @Router /transactions [get]
 func GetTransaction(c *fiber.Ctx) error { //обрабатываем HTTP-метод GET.
 		// c *fiber.Ctx - указатель на контекст запроса
 		// error - тип, возвращаемый функцией
@@ -37,7 +42,14 @@ func GetTransaction(c *fiber.Ctx) error { //обрабатываем HTTP-мет
 		return c.JSON(transactions)
 	}
 
-
+// @Summary Create a new transaction
+// @Accept json
+// @Produce json
+// @Param transaction body Transaction true "Transaction data"
+// @Success 201 {object} Transaction
+// @Failure 400 {object} map[string]string "Error response"
+// @Failure 500 {object} map[string]string "Error response"
+// @Router /transactions [post]
 func PostTransactions(c *fiber.Ctx) error {
 		transaction := new(Transaction) //возвращаем указатель на пустую структуру
 		err := c.BodyParser(transaction) //записывает данные из запроса в структуру
@@ -62,11 +74,18 @@ func PostTransactions(c *fiber.Ctx) error {
 		return c.Status(201).JSON(transaction)
 	}
 
+// @Summary Get balance
+// @Description Calculate and return the balance
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]float64 "Balance response"
+// @Failure 500 {object} map[string]string "Error response"
+// @Router /balance [get]
 func GetBalance(c *fiber.Ctx) error {
 	var totalIncome float64
 	var totalExpense float64
 
-		db.Model(&Transaction{}).
+	db.Model(&Transaction{}).
 		Where("type = ?", "income").
 		Select("COALESCE(SUM(amount),0)"). //COALESCE заменит NULL на 0 если подходящие записи не найдены
 		Scan(&totalIncome) //запишет результат запроса в переменную
@@ -81,10 +100,9 @@ func GetBalance(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"balance": balance})
 }
 
-// @title Fiber Example API
-// @version 1.0
-// @description This is a sample swagger for Fiber
-// @termsOfService http://swagger.io/terms/
+// @title Finance tracker API
+// @description API for tracking personal finance transactions
+// @host localhost:3000
 func main() {
 	err := godotenv.Load()
 	if err != nil {

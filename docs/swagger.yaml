@@ -1,8 +1,100 @@
+definitions:
+  main.Transaction:
+    properties:
+      amount:
+        type: number
+      category:
+        description: категория - еда, одежда и тд
+        type: string
+      createdAt:
+        description: автоматически создается GORM
+        type: string
+      date:
+        type: string
+      description:
+        description: может быть пустым
+        type: string
+      id:
+        type: integer
+      type:
+        description: тип транзакции - трата или расход
+        type: string
+    type: object
+host: localhost:3000
 info:
   contact: {}
-  description: This is a sample swagger for Fiber
-  termsOfService: http://swagger.io/terms/
-  title: Fiber Example API
-  version: "1.0"
-paths: {}
+  description: API for tracking personal finance transactions
+  title: Finance tracker API
+paths:
+  /balance:
+    get:
+      consumes:
+      - application/json
+      description: Calculate and return the balance
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Balance response
+          schema:
+            additionalProperties:
+              type: number
+            type: object
+        "500":
+          description: Error response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get balance
+  /transactions:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/main.Transaction'
+            type: array
+        "500":
+          description: Error response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all transactions
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Transaction data
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/main.Transaction'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.Transaction'
+        "400":
+          description: Error response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Error response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new transaction
 swagger: "2.0"
