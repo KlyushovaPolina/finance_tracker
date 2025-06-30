@@ -167,7 +167,8 @@ func main() {
 	db_user := os.Getenv("DB_USER")
     db_name := os.Getenv("DB_NAME")
 	db_password := os.Getenv("DB_PASSWORD")
-	dsn := "host=localhost user=" + db_user + " password=" + db_password + " dbname=" + db_name + " port=5432 sslmode=disable TimeZone=Europe/Moscow" //data source name
+	db_port := os.Getenv("DB_PORT")
+	dsn := "host=localhost user=" + db_user + " password=" + db_password + " dbname=" + db_name + " port=" + db_port + " sslmode=disable TimeZone=Europe/Moscow" //data source name
 
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
