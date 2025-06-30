@@ -21,6 +21,7 @@ import (
 
 type Transaction struct { //модель
 	ID          uint	`gorm:"primaryKey"`
+	UserID      uint       `gorm:"not null"` // Привязка к пользователю
 	Amount      float64  `gorm:"not null"`
 	Type        string   `gorm:"not null; check:type_check,type IN ('income','expense')"` //тип транзакции - трата или расход
 	Category    string  //категория - еда, одежда и тд
@@ -94,7 +95,9 @@ func GetTransaction(c *fiber.Ctx) error { //обрабатываем HTTP-мет
 		// error - тип, возвращаемый функцией
 		// определяем функцию, которая вызывается когда поступает запрос
 		var transactions []Transaction //создаем срез для хранения списка транзакций из бд
-		db.Find(&transactions)
+		userID := c.Locals("user_id").(uint)
+
+		db.Where("user_id = ?", userID).Find(&transactions)
 		return c.JSON(transactions)
 	}
 
@@ -126,6 +129,8 @@ func PostTransactions(c *fiber.Ctx) error {
 			transaction.Date = time.Now()
 		}
 
+		transaction.UserID = c.Locals("user_id").(uint) // привязываем к пользователю
+
 		db.Create(transaction)
 		return c.Status(201).JSON(transaction)
 	}
@@ -142,9 +147,10 @@ func PostTransactions(c *fiber.Ctx) error {
 // @Router /transactions/{id} [put]
 func PutTransaction(c *fiber.Ctx) error {
 	id := c.Params("id") //получаем id из URL
+	userID := c.Locals("user_id").(uint)
 
 	var transaction Transaction
-	if err := db.First(&transaction, id).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ?", id, userID).First(&transaction).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Transaction not found"})
 	}
 
@@ -175,9 +181,10 @@ func PutTransaction(c *fiber.Ctx) error {
 // @Router /transactions/{id} [delete]
 func DeleteTransaction(c *fiber.Ctx) error {
 	id := c.Params("id")
+	userID := c.Locals("user_id").(uint)
 
 	var transaction Transaction
-	if err := db.First(&transaction, id).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ?", id, userID).First(&transaction).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Transaction not found"})
 	}
 
@@ -197,13 +204,15 @@ func GetBalance(c *fiber.Ctx) error {
 	var totalIncome float64
 	var totalExpense float64
 
+	userID := c.Locals("user_id").(uint)
+
 	db.Model(&Transaction{}).
-		Where("type = ?", "income").
+		Where("type = ? AND user_id = ?", "income", userID).
 		Select("COALESCE(SUM(amount),0)"). //COALESCE заменит NULL на 0 если подходящие записи не найдены
 		Scan(&totalIncome) //запишет результат запроса в переменную
 
 	db.Model(&Transaction{}).
-		Where("type = ?", "expense").
+		Where("type = ? AND user_id = ?", "expense", userID).
 		Select("COALESCE(SUM(amount),0)").
 		Scan(&totalExpense)
 
@@ -277,6 +286,14 @@ func JWTProtected(c *fiber.Ctx) error { //middleware проверяющее JWT-
     })(c) //созданный мидлвар вызывается текущим контекстом
 }
 
+func ExtractUserIDMiddleware(c *fiber.Ctx) error {
+    token := c.Locals("jwt").(*jwt.Token) // Изменено с "user" на "jwt"
+    claims := token.Claims.(jwt.MapClaims)
+    userID := uint(claims["user_id"].(float64))
+    c.Locals("user_id", userID)
+    return c.Next()
+}
+
 // @title Finance tracker API
 // @description API for tracking personal finance transactions
 // @host localhost:3000
@@ -303,11 +320,16 @@ func main() {
 
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
-	app.Get("/transactions", GetTransaction)
-	app.Post("/transactions", PostTransactions)
-	app.Put("/transactions/:id", PutTransaction)
-	app.Delete("/transactions/:id", DeleteTransaction)
-	app.Get("/balance", GetBalance)
+	api := app.Group("/api") // защищённые маршруты
+
+	api.Use(JWTProtected) 
+	api.Use(ExtractUserIDMiddleware)
+
+	api.Get("/transactions", GetTransaction)
+	api.Post("/transactions", PostTransactions)
+	api.Put("/transactions/:id", PutTransaction)
+	api.Delete("/transactions/:id", DeleteTransaction)
+	api.Get("/balance", GetBalance)
 
 	// Auth
 	auth := app.Group("/auth")
