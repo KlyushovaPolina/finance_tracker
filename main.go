@@ -74,6 +74,61 @@ func PostTransactions(c *fiber.Ctx) error {
 		return c.Status(201).JSON(transaction)
 	}
 
+// PATCH /transactions/:id
+// @Summary Update a transaction
+// @Accept json
+// @Produce json
+// @Param id path int true "Transaction ID"
+// @Param transaction body Transaction true "Transaction data"
+// @Success 200 {object} Transaction
+// @Failure 400 {object} map[string]string "Error response"
+// @Failure 404 {object} map[string]string "Error response"
+// @Router /transactions/{id} [patch]
+func UpdateTransaction(c *fiber.Ctx) error {
+	id := c.Params("id") //получаем id из URL
+
+	var transaction Transaction
+	if err := db.First(&transaction, id).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Transaction not found"})
+	}
+
+	updateData := new(Transaction)
+	if err := c.BodyParser(updateData); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	// Проверим что Type корректный, если он передан
+	if updateData.Type != "" && updateData.Type != "income" && updateData.Type != "expense" {
+		return c.Status(400).JSON(fiber.Map{"error": "Type must be 'income' or 'expense'"})
+	}
+
+	// Обновляем только переданные поля
+	db.Model(&transaction).Updates(updateData)
+
+	return c.JSON(transaction)
+}
+
+// DELETE /transactions/:id
+// @Summary Delete a transaction
+// @Accept json
+// @Produce json
+// @Param id path int true "Transaction ID"
+// @Success 200 {object} map[string]string "Success response"
+// @Failure 404 {object} map[string]string "Error response"
+// @Router /transactions/{id} [delete]
+func DeleteTransaction(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	var transaction Transaction
+	if err := db.First(&transaction, id).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Transaction not found"})
+	}
+
+	db.Delete(&transaction)
+
+	return c.JSON(fiber.Map{"message": "Transaction deleted successfully"})
+}
+
 // @Summary Get balance
 // @Description Calculate and return the balance
 // @Accept json
@@ -127,6 +182,8 @@ func main() {
 
 	app.Get("/transactions", GetTransaction)
 	app.Post("/transactions", PostTransactions)
+	app.Patch("/transactions/:id", UpdateTransaction)
+	app.Delete("/transactions/:id", DeleteTransaction)
 	app.Get("/balance", GetBalance)
 
 	app.Listen(":3000")

@@ -97,4 +97,65 @@ paths:
               type: string
             type: object
       summary: Create a new transaction
+  /transactions/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Error response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a transaction
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Transaction data
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/main.Transaction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Transaction'
+        "400":
+          description: Error response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Error response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a transaction
 swagger: "2.0"
