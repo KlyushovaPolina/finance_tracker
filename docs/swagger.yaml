@@ -19,6 +19,16 @@ definitions:
       type:
         description: тип транзакции - трата или расход
         type: string
+      userID:
+        description: Привязка к пользователю
+        type: integer
+    type: object
+  main.authRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
     type: object
 host: localhost:3000
 info:
@@ -26,11 +36,11 @@ info:
   description: API for tracking personal finance transactions
   title: Finance tracker API
 paths:
-  /balance:
+  /api/balance:
     get:
       consumes:
       - application/json
-      description: Calculate and return the balance
+      description: Calculate and return the balance for the authenticated user
       produces:
       - application/json
       responses:
@@ -40,36 +50,56 @@ paths:
             additionalProperties:
               type: number
             type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "500":
-          description: Error response
+          description: Internal server error
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Get balance
-  /transactions:
+      security:
+      - ApiKeyAuth: []
+      summary: Get user balance
+      tags:
+      - transactions
+  /api/transactions:
     get:
       consumes:
       - application/json
+      description: Retrieve all transactions for the authenticated user
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: List of transactions
           schema:
             items:
               $ref: '#/definitions/main.Transaction'
             type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "500":
-          description: Error response
+          description: Internal server error
           schema:
             additionalProperties:
               type: string
             type: object
+      security:
+      - ApiKeyAuth: []
       summary: Get all transactions
+      tags:
+      - transactions
     post:
       consumes:
       - application/json
+      description: Create a new transaction for the authenticated user
       parameters:
       - description: Transaction data
         in: body
@@ -81,26 +111,36 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Created transaction
           schema:
             $ref: '#/definitions/main.Transaction'
         "400":
-          description: Error response
+          description: Invalid request body or parameters
           schema:
             additionalProperties:
               type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
             type: object
         "500":
-          description: Error response
+          description: Internal server error
           schema:
             additionalProperties:
               type: string
             type: object
+      security:
+      - ApiKeyAuth: []
       summary: Create a new transaction
-  /transactions/{id}:
+      tags:
+      - transactions
+  /api/transactions/{id}:
     delete:
       consumes:
       - application/json
+      description: Delete a transaction by ID for the authenticated user
       parameters:
       - description: Transaction ID
         in: path
@@ -116,23 +156,33 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "404":
-          description: Error response
+          description: Transaction not found
           schema:
             additionalProperties:
               type: string
             type: object
+      security:
+      - ApiKeyAuth: []
       summary: Delete a transaction
+      tags:
+      - transactions
     put:
       consumes:
       - application/json
+      description: Fully update a transaction by ID for the authenticated user
       parameters:
       - description: Transaction ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Full Transaction data
+      - description: Full transaction data
         in: body
         name: transaction
         required: true
@@ -142,20 +192,106 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Updated transaction
           schema:
             $ref: '#/definitions/main.Transaction'
         "400":
-          description: Error response
+          description: Invalid request body or parameters
           schema:
             additionalProperties:
               type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
             type: object
         "404":
-          description: Error response
+          description: Transaction not found
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Fully update a transaction
+      security:
+      - ApiKeyAuth: []
+      summary: Update a transaction
+      tags:
+      - transactions
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return a JWT token
+      parameters:
+      - description: User credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/main.authRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token response
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Invalid email or password
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login a user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with email and password
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/main.authRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request body or email already exists
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
 swagger: "2.0"

@@ -85,11 +85,15 @@ func VerifyToken(tokenString string) (bool, error) {
 var db *gorm.DB
 
 // @Summary Get all transactions
+// @Description Retrieve all transactions for the authenticated user
+// @Tags transactions
 // @Accept json
 // @Produce json
-// @Success 200 {array} Transaction
-// @Failure 500 {object} map[string]string "Error response"
-// @Router /transactions [get]
+// @Security ApiKeyAuth
+// @Success 200 {array} Transaction "List of transactions"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/transactions [get]
 func GetTransaction(c *fiber.Ctx) error { //обрабатываем HTTP-метод GET.
 		// c *fiber.Ctx - указатель на контекст запроса
 		// error - тип, возвращаемый функцией
@@ -102,13 +106,18 @@ func GetTransaction(c *fiber.Ctx) error { //обрабатываем HTTP-мет
 	}
 
 // @Summary Create a new transaction
+// @Summary Create a new transaction
+// @Description Create a new transaction for the authenticated user
+// @Tags transactions
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
 // @Param transaction body Transaction true "Transaction data"
-// @Success 201 {object} Transaction
-// @Failure 400 {object} map[string]string "Error response"
-// @Failure 500 {object} map[string]string "Error response"
-// @Router /transactions [post]
+// @Success 201 {object} Transaction "Created transaction"
+// @Failure 400 {object} map[string]string "Invalid request body or parameters"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/transactions [post]
 func PostTransactions(c *fiber.Ctx) error {
 		transaction := new(Transaction) //возвращаем указатель на пустую структуру
 		err := c.BodyParser(transaction) //записывает данные из запроса в структуру
@@ -135,16 +144,19 @@ func PostTransactions(c *fiber.Ctx) error {
 		return c.Status(201).JSON(transaction)
 	}
 
-// PUT /transactions/:id
-// @Summary Fully update a transaction
+// @Summary Update a transaction
+// @Description Fully update a transaction by ID for the authenticated user
+// @Tags transactions
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
 // @Param id path int true "Transaction ID"
-// @Param transaction body Transaction true "Full Transaction data"
-// @Success 200 {object} Transaction
-// @Failure 400 {object} map[string]string "Error response"
-// @Failure 404 {object} map[string]string "Error response"
-// @Router /transactions/{id} [put]
+// @Param transaction body Transaction true "Full transaction data"
+// @Success 200 {object} Transaction "Updated transaction"
+// @Failure 400 {object} map[string]string "Invalid request body or parameters"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 404 {object} map[string]string "Transaction not found"
+// @Router /api/transactions/{id} [put]
 func PutTransaction(c *fiber.Ctx) error {
 	id := c.Params("id") //получаем id из URL
 	userID := c.Locals("user_id").(uint)
@@ -171,14 +183,17 @@ func PutTransaction(c *fiber.Ctx) error {
 	return c.JSON(transaction)
 }
 
-// DELETE /transactions/:id
 // @Summary Delete a transaction
+// @Description Delete a transaction by ID for the authenticated user
+// @Tags transactions
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
 // @Param id path int true "Transaction ID"
 // @Success 200 {object} map[string]string "Success response"
-// @Failure 404 {object} map[string]string "Error response"
-// @Router /transactions/{id} [delete]
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 404 {object} map[string]string "Transaction not found"
+// @Router /api/transactions/{id} [delete]
 func DeleteTransaction(c *fiber.Ctx) error {
 	id := c.Params("id")
 	userID := c.Locals("user_id").(uint)
@@ -193,13 +208,16 @@ func DeleteTransaction(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Transaction deleted successfully"})
 }
 
-// @Summary Get balance
-// @Description Calculate and return the balance
+// @Summary Get user balance
+// @Description Calculate and return the balance for the authenticated user
+// @Tags transactions
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
 // @Success 200 {object} map[string]float64 "Balance response"
-// @Failure 500 {object} map[string]string "Error response"
-// @Router /balance [get]
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/balance [get]
 func GetBalance(c *fiber.Ctx) error {
 	var totalIncome float64
 	var totalExpense float64
@@ -221,6 +239,16 @@ func GetBalance(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{"balance": balance})
 }
 
+// @Summary Register a new user
+// @Description Create a new user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body authRequest true "User credentials"
+// @Success 201 {object} map[string]string "Success response"
+// @Failure 400 {object} map[string]string "Invalid request body or email already exists"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /auth/register [post]
 func Register(c *fiber.Ctx) error {
     var req authRequest //структура для десереализации JSON
     if err := c.BodyParser(&req); err != nil {
@@ -243,6 +271,17 @@ func Register(c *fiber.Ctx) error {
     })
 }
 
+// @Summary Login a user
+// @Description Authenticate a user and return a JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param credentials body authRequest true "User credentials"
+// @Success 200 {object} map[string]interface{} "Token response"
+// @Failure 400 {object} map[string]string "Invalid request body"
+// @Failure 401 {object} map[string]string "Invalid email or password"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /auth/login [post]
 func Login(c *fiber.Ctx) error {
     var req authRequest
     if err := c.BodyParser(&req); err != nil {
