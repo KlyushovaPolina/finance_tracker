@@ -34,6 +34,7 @@ cd finance-tracker
 DB_USER=your_postgres_username
 DB_PASSWORD=your_postgres_password
 DB_NAME=your_database_name
+DB_PORT=your_db_port
 ```
 
 3. Установи зависимости:
